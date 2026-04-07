@@ -8,6 +8,7 @@ const navLinks = [
   { to: '/food-picker', label: 'Food Picker' },
   { to: '/pagerduty', label: 'PagerDuty' },
   { to: '/sentry', label: 'Sentry' },
+  { to: '/github', label: 'GitHub PRs' },
 ]
 
 export default function Layout() {

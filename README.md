@@ -12,6 +12,7 @@ A collection of work quality-of-life tools for SaaS development teams. Hosted on
 | Food Picker | `/food-picker` | Map of visited spots + randomizer |
 | PagerDuty | `/pagerduty` | On-call schedule and active incidents |
 | Sentry | `/sentry` | Unresolved error issues viewer |
+| GitHub PRs | `/github` | Open pull requests across all configured repos |
 
 ## Tech Stack
 
