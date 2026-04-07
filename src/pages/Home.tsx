@@ -230,9 +230,9 @@ function TabTitleBadge() {
 
   useEffect(() => {
     const count = data?.length ?? 0
-    document.title = count > 0 ? `(${count}) work-qol` : 'work-qol'
+    document.title = count > 0 ? `(${count}) TrackRevenue` : 'TrackRevenue'
     return () => {
-      document.title = 'work-qol'
+      document.title = 'TrackRevenue'
     }
   }, [data])
 

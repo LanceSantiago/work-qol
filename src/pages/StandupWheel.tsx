@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { randomPick } from '../utils/random'
 
-const STORAGE_KEY = 'standup-wheel-names'
+const TEAM_PRESET = ['Lance', 'Josh', 'Happi', 'Patrik', 'Craig', 'Kana', 'Barry', 'Michael']
+const POLL_INTERVAL = 5000
+
 const COLORS = [
   '#3b82f6',
   '#8b5cf6',
@@ -12,6 +14,12 @@ const COLORS = [
   '#f59e0b',
   '#ef4444',
 ]
+
+interface StandupState {
+  names: string[]
+  winner: string | null
+  spunAt: string | null
+}
 
 function drawWheel(ctx: CanvasRenderingContext2D, names: string[], rotation: number, size: number) {
   const cx = size / 2
@@ -25,7 +33,6 @@ function drawWheel(ctx: CanvasRenderingContext2D, names: string[], rotation: num
     const start = rotation + i * slice
     const end = start + slice
 
-    // Slice fill
     ctx.beginPath()
     ctx.moveTo(cx, cy)
     ctx.arc(cx, cy, radius, start, end)
@@ -36,7 +43,6 @@ function drawWheel(ctx: CanvasRenderingContext2D, names: string[], rotation: num
     ctx.lineWidth = 2
     ctx.stroke()
 
-    // Label
     ctx.save()
     ctx.translate(cx, cy)
     ctx.rotate(start + slice / 2)
@@ -49,7 +55,6 @@ function drawWheel(ctx: CanvasRenderingContext2D, names: string[], rotation: num
     ctx.restore()
   })
 
-  // Center cap
   ctx.beginPath()
   ctx.arc(cx, cy, 18, 0, 2 * Math.PI)
   ctx.fillStyle = 'white'
@@ -58,7 +63,6 @@ function drawWheel(ctx: CanvasRenderingContext2D, names: string[], rotation: num
   ctx.lineWidth = 2
   ctx.stroke()
 
-  // Pointer triangle (right side)
   const px = size - 6
   ctx.beginPath()
   ctx.moveTo(px, cy - 12)
@@ -69,34 +73,70 @@ function drawWheel(ctx: CanvasRenderingContext2D, names: string[], rotation: num
   ctx.fill()
 }
 
-// Easing: deceleration curve
 function easeOut(t: number): number {
   return 1 - Math.pow(1 - t, 4)
 }
 
 export default function StandupWheel() {
-  const [names, setNames] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
-  })
+  const [names, setNames] = useState<string[]>([])
   const [input, setInput] = useState('')
   const [winner, setWinner] = useState<string | null>(null)
   const [spinning, setSpinning] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [configured, setConfigured] = useState(true)
 
+  // Track the last spunAt we've seen so we don't re-trigger our own spin
+  const lastSpunAtRef = useRef<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rotationRef = useRef(0)
   const animFrameRef = useRef<number | null>(null)
 
   const CANVAS_SIZE = 340
 
-  // Persist names to localStorage
+  // ── API helpers ──────────────────────────────────────────────────────────────
+
+  const fetchState = useCallback(async () => {
+    try {
+      const res = await fetch('/api/standup')
+      if (res.status === 503) {
+        setConfigured(false)
+        return
+      }
+      const state: StandupState = await res.json()
+      setNames(state.names)
+
+      // If a new spin came in from someone else, show the winner modal
+      if (state.winner && state.spunAt && state.spunAt !== lastSpunAtRef.current && !spinning) {
+        lastSpunAtRef.current = state.spunAt
+        triggerSpin(state.names, state.winner)
+      }
+    } catch {
+      // network error — silently ignore, keep current state
+    }
+  }, [spinning]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const saveNames = async (next: string[]) => {
+    setSaving(true)
+    try {
+      await fetch('/api/standup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ names: next }),
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // ── Polling ──────────────────────────────────────────────────────────────────
+
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(names))
-  }, [names])
+    fetchState()
+    const id = setInterval(fetchState, POLL_INTERVAL)
+    return () => clearInterval(id)
+  }, [fetchState])
+
+  // ── Canvas ───────────────────────────────────────────────────────────────────
 
   const redraw = useCallback(
     (rotation: number) => {
@@ -109,7 +149,6 @@ export default function StandupWheel() {
     [names]
   )
 
-  // Redraw when names change
   useEffect(() => {
     if (names.length > 0) redraw(rotationRef.current)
     else {
@@ -119,71 +158,118 @@ export default function StandupWheel() {
     }
   }, [names, redraw])
 
-  const spin = () => {
-    if (spinning || names.length < 2) return
-
-    setWinner(null)
-    setSpinning(true)
-
-    const picked = randomPick(names)
-    const pickedIndex = names.indexOf(picked)
-    const slice = (2 * Math.PI) / names.length
-
-    // Calculate the target rotation so the pointer (right side, angle 0)
-    // lands in the middle of the picked slice
-    const targetSliceAngle = -(pickedIndex * slice + slice / 2)
-    // Add multiple full rotations for the spin effect (5–8 full turns)
-    const extraSpins = (5 + Math.random() * 3) * 2 * Math.PI
-    const totalRotation = extraSpins + targetSliceAngle - (rotationRef.current % (2 * Math.PI))
-
-    const duration = 4000 + Math.random() * 1000
-    const start = performance.now()
-    const startRotation = rotationRef.current
-
-    const animate = (now: number) => {
-      const elapsed = now - start
-      const t = Math.min(elapsed / duration, 1)
-      const easedT = easeOut(t)
-      rotationRef.current = startRotation + totalRotation * easedT
-      redraw(rotationRef.current)
-
-      if (t < 1) {
-        animFrameRef.current = requestAnimationFrame(animate)
-      } else {
-        setSpinning(false)
-        setWinner(picked)
-      }
-    }
-
-    animFrameRef.current = requestAnimationFrame(animate)
-  }
-
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current)
     }
   }, [])
 
+  // ── Spin animation ───────────────────────────────────────────────────────────
+
+  const triggerSpin = useCallback(
+    (currentNames: string[], picked: string) => {
+      if (spinning || currentNames.length < 2) return
+      setWinner(null)
+      setSpinning(true)
+
+      const pickedIndex = currentNames.indexOf(picked)
+      const slice = (2 * Math.PI) / currentNames.length
+
+      // Angle where the pointer (right side, angle 0) lands on the middle of the picked slice
+      const targetAngle =
+        (((-pickedIndex * slice - slice / 2) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)
+
+      // Current wheel angle normalised to [0, 2π)
+      const currentAngle = ((rotationRef.current % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)
+
+      // Shortest positive arc to target (never zero — always spin at least a little)
+      let delta = targetAngle - currentAngle
+      if (delta <= 0) delta += 2 * Math.PI
+
+      // Add whole-number extra rotations so the fractional offset stays exact
+      const extraSpins = (5 + Math.floor(Math.random() * 4)) * 2 * Math.PI
+      const totalRotation = extraSpins + delta
+
+      const duration = 4000 + Math.random() * 1000
+      const start = performance.now()
+      const startRotation = rotationRef.current
+
+      const animate = (now: number) => {
+        const elapsed = now - start
+        const t = Math.min(elapsed / duration, 1)
+        rotationRef.current = startRotation + totalRotation * easeOut(t)
+        redraw(rotationRef.current)
+
+        if (t < 1) {
+          animFrameRef.current = requestAnimationFrame(animate)
+        } else {
+          setSpinning(false)
+          setWinner(picked)
+        }
+      }
+
+      animFrameRef.current = requestAnimationFrame(animate)
+    },
+    [spinning, redraw]
+  )
+
+  const spin = async () => {
+    if (spinning || names.length < 2) return
+    const picked = randomPick(names)
+    // Best-effort save to KV — if not configured, spin locally anyway
+    try {
+      const res = await fetch('/api/standup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ winner: picked }),
+      })
+      if (res.ok) {
+        const next: StandupState = await res.json()
+        lastSpunAtRef.current = next.spunAt
+      }
+    } catch {
+      // network error — spin locally
+    }
+    triggerSpin(names, picked)
+  }
+
+  // ── Name management ──────────────────────────────────────────────────────────
+
   const addName = () => {
     const trimmed = input.trim()
     if (!trimmed || names.includes(trimmed)) return
-    setNames((prev) => [...prev, trimmed])
+    const next = [...names, trimmed]
+    setNames(next)
     setInput('')
     setWinner(null)
+    saveNames(next)
   }
 
   const removeName = (name: string) => {
-    setNames((prev) => prev.filter((n) => n !== name))
+    const next = names.filter((n) => n !== name)
+    setNames(next)
     setWinner(null)
+    saveNames(next)
+  }
+
+  const loadPreset = () => {
+    setNames(TEAM_PRESET)
+    setWinner(null)
+    saveNames(TEAM_PRESET)
   }
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-1">Standup Wheel</h1>
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-        Spin to pick who runs standup today.
+        Spin to pick who runs standup today. Synced across your team in real-time.
       </p>
+
+      {!configured && (
+        <div className="mb-6 rounded-xl border border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-900/20 px-4 py-3 text-sm text-yellow-700 dark:text-yellow-400">
+          ⚠️ STANDUP KV namespace not configured — running in local-only mode.
+        </div>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* Wheel */}
@@ -213,20 +299,24 @@ export default function StandupWheel() {
           </button>
 
           {winner && !spinning && (
-            <div className="text-center animate-bounce">
-              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                Running standup today
-              </p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{winner}</p>
-            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Last picked:{' '}
+              <span className="font-semibold text-gray-800 dark:text-gray-200">{winner}</span>
+            </p>
           )}
         </div>
 
         {/* Name list */}
         <div className="flex-1 w-full max-w-sm">
-          <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-            Team members
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Team members</h2>
+            <button
+              onClick={loadPreset}
+              className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
+            >
+              Load team preset
+            </button>
+          </div>
 
           <div className="flex gap-2 mb-4">
             <input
@@ -239,7 +329,7 @@ export default function StandupWheel() {
             />
             <button
               onClick={addName}
-              disabled={!input.trim()}
+              disabled={!input.trim() || saving}
               className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-sm font-medium transition-colors"
             >
               Add
@@ -281,6 +371,46 @@ export default function StandupWheel() {
           )}
         </div>
       </div>
+
+      {/* Winner modal */}
+      {winner && !spinning && (
+        <div
+          role="presentation"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={() => setWinner(null)}
+          onKeyDown={(e) => e.key === 'Escape' && setWinner(null)}
+        >
+          <div
+            role="presentation"
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl px-12 py-10 flex flex-col items-center gap-3 animate-[winner-pop_0.35s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          >
+            <p className="text-5xl">🎉</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+              Running standup today
+            </p>
+            <p className="text-4xl font-bold text-gray-900 dark:text-gray-100">{winner}</p>
+            <div className="mt-4 flex gap-3">
+              <button
+                onClick={() => setWinner(null)}
+                className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => {
+                  removeName(winner)
+                  setWinner(null)
+                }}
+                className="px-6 py-2 rounded-xl bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/70 text-red-600 dark:text-red-400 font-medium transition-colors"
+              >
+                Remove from wheel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

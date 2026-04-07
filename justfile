@@ -1,15 +1,17 @@
 # work-qol dev commands
 # Install just: https://github.com/casey/just
 
+set windows-shell := ["cmd", "/c"]
+
 # List available commands
 default:
-    @just --list
+    just --list
 
 # ── Docker ────────────────────────────────────────────────────────────────────
 
 # Rebuild images and start all containers (app + partykit)
 start:
-    docker compose up --build
+    docker compose up --build -d
 
 # Start containers in the background
 start-bg:

@@ -45,6 +45,9 @@ function SkeletonRow() {
       <td className="px-4 py-3">
         <div className="h-3 w-full max-w-xs bg-gray-200 dark:bg-gray-700 rounded" />
       </td>
+      <td className="px-4 py-3 hidden sm:table-cell">
+        <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+      </td>
       <td className="px-4 py-3">
         <div className="h-3 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
       </td>
@@ -129,6 +132,9 @@ export default function SentryViewer() {
             <tr className="border-b border-gray-100 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               <th className="text-left px-4 py-2.5 font-medium w-20">Level</th>
               <th className="text-left px-4 py-2.5 font-medium">Issue</th>
+              <th className="text-left px-4 py-2.5 font-medium w-32 hidden sm:table-cell">
+                Project
+              </th>
               <th className="text-right px-4 py-2.5 font-medium w-20">Events</th>
               <th className="text-right px-4 py-2.5 font-medium w-28">Last seen</th>
             </tr>
@@ -145,7 +151,7 @@ export default function SentryViewer() {
             {!loading && issues.length === 0 && (
               <tr>
                 <td
-                  colSpan={4}
+                  colSpan={5}
                   className="px-4 py-8 text-center text-gray-400 dark:text-gray-500 text-sm"
                 >
                   {error ? 'Could not load issues.' : '✓ No unresolved issues in the last 24 hours'}
@@ -180,6 +186,11 @@ export default function SentryViewer() {
                       </p>
                     </div>
                   </div>
+                </td>
+                <td className="px-4 py-3 hidden sm:table-cell">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[120px] block">
+                    {issue.project}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <span className="font-mono text-sm font-medium">

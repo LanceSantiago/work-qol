@@ -10,7 +10,6 @@ function makeCtx(overrides: Record<string, string> = {}) {
     env: {
       SENTRY_AUTH_TOKEN: 'test-token',
       SENTRY_ORG_SLUG: 'my-org',
-      SENTRY_PROJECT_SLUG: 'my-project',
       ...overrides,
     },
     params: {},
@@ -37,11 +36,11 @@ describe('GET /api/sentry/issues', () => {
     )
   })
 
-  it('builds correct URL from org and project slugs', async () => {
+  it('builds correct URL from org slug', async () => {
     mockFetch.mockResolvedValue({ ok: true, json: () => Promise.resolve([]) })
     await onRequestGet(makeCtx() as Parameters<typeof onRequestGet>[0])
     const url: string = mockFetch.mock.calls[0][0] as string
-    expect(url).toContain('/my-org/my-project/issues/')
+    expect(url).toContain('/organizations/my-org/issues/')
     expect(url).toContain('is:unresolved')
   })
 
@@ -60,15 +59,22 @@ describe('GET /api/sentry/issues', () => {
             firstSeen: '2024-01-01T09:00:00Z',
             permalink: 'https://sentry.io/issues/123',
             isUnhandled: true,
+            project: { slug: 'my-project', name: 'My Project' },
           },
         ]),
     })
     const res = await onRequestGet(makeCtx() as Parameters<typeof onRequestGet>[0])
-    const data = (await res.json()) as Array<{ title: string; count: string; isUnhandled: boolean }>
+    const data = (await res.json()) as Array<{
+      title: string
+      count: string
+      isUnhandled: boolean
+      project: string
+    }>
     expect(data).toHaveLength(1)
     expect(data[0].title).toBe('TypeError: Cannot read property')
     expect(data[0].count).toBe('450')
     expect(data[0].isUnhandled).toBe(true)
+    expect(data[0].project).toBe('My Project')
   })
 
   it('returns 502 on upstream error', async () => {

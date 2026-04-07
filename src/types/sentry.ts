@@ -10,6 +10,7 @@ export interface SentryIssue {
   firstSeen: string
   permalink: string
   isUnhandled: boolean
+  project: string
 }
 
 export interface ApiError {

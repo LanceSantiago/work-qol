@@ -20,9 +20,11 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
-              <span className="font-semibold text-sm mr-3 shrink-0 text-gray-700 dark:text-gray-300">
-                work-qol
-              </span>
+              <img
+                src="/logo.png"
+                alt="TrackRevenue"
+                className="h-6 mr-3 shrink-0 dark:brightness-90"
+              />
               {navLinks.map(({ to, label, end }) => (
                 <NavLink
                   key={to}

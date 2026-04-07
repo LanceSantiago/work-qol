@@ -28,13 +28,18 @@ function pinColor(place: Place): string {
   return '#6b7280' // visited very recently — gray
 }
 
+// ── Default location: Markham, Ontario ───────────────────────────────────────
+
+const MARKHAM: [number, number] = [43.855, -79.3687]
+const DEFAULT_ZOOM = 14
+
 // ── Auto-fit map bounds when places change ────────────────────────────────────
 
 function MapFitter({ places }: { places: Place[] }) {
   const map = useMap()
   useEffect(() => {
     const withCoords = places.filter((p) => p.lat !== 0 || p.lng !== 0)
-    if (withCoords.length === 0) return
+    if (withCoords.length === 0) return // keep Markham default
     if (withCoords.length === 1) {
       map.setView([withCoords[0].lat, withCoords[0].lng], 15)
       return
@@ -43,6 +48,88 @@ function MapFitter({ places }: { places: Place[] }) {
     map.fitBounds(bounds, { padding: [40, 40] })
   }, [places, map])
   return null
+}
+
+// ── Nearby places via Overpass API ────────────────────────────────────────────
+
+interface OsmPlace {
+  id: number
+  lat: number
+  lon: number
+  tags: { name?: string; amenity?: string; cuisine?: string; 'addr:full'?: string }
+}
+
+function nearbyIcon() {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);opacity:0.85"></div>`,
+    iconSize: [10, 10],
+    iconAnchor: [5, 5],
+    popupAnchor: [0, -8],
+  })
+}
+
+function NearbyMarkers({
+  existing,
+  onAdd,
+}: {
+  existing: Place[]
+  onAdd: (place: OsmPlace) => void
+}) {
+  const [nearby, setNearby] = useState<OsmPlace[]>([])
+
+  useEffect(() => {
+    const [lat, lng] = MARKHAM
+    const query = `[out:json][timeout:15];
+node["amenity"~"^(restaurant|cafe|fast_food|bar|pub|food_court)$"](around:2000,${lat},${lng});
+out body 40;`
+
+    fetch('https://overpass-api.de/api/interpreter', {
+      method: 'POST',
+      body: query,
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const typed = data as { elements: OsmPlace[] }
+        setNearby(typed.elements.filter((e) => e.tags?.name))
+      })
+      .catch(() => {}) // silently ignore if Overpass is down
+  }, [])
+
+  const existingNames = new Set(existing.map((p) => p.name.toLowerCase()))
+
+  return (
+    <>
+      {nearby.map((place) => {
+        const alreadyAdded = existingNames.has((place.tags.name ?? '').toLowerCase())
+        return (
+          <Marker key={place.id} position={[place.lat, place.lon]} icon={nearbyIcon()}>
+            <Popup>
+              <div className="text-sm min-w-[160px]">
+                <p className="font-semibold mb-0.5">{place.tags.name}</p>
+                {place.tags.amenity && (
+                  <p className="text-xs text-gray-500 capitalize mb-2">
+                    {place.tags.amenity.replace('_', ' ')}
+                    {place.tags.cuisine ? ` · ${place.tags.cuisine}` : ''}
+                  </p>
+                )}
+                {alreadyAdded ? (
+                  <p className="text-xs text-gray-400">Already in your list</p>
+                ) : (
+                  <button
+                    onClick={() => onAdd(place)}
+                    className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                  >
+                    + Add to my list
+                  </button>
+                )}
+              </div>
+            </Popup>
+          </Marker>
+        )
+      })}
+    </>
+  )
 }
 
 // ── Nominatim geocoding ───────────────────────────────────────────────────────
@@ -207,6 +294,35 @@ export default function FoodPicker() {
     [apiAvailable, picked]
   )
 
+  const addFromOsm = useCallback(
+    async (osm: OsmPlace) => {
+      const name = osm.tags.name ?? 'Unknown'
+      const address = osm.tags['addr:full'] ?? ''
+      const payload = {
+        name,
+        address,
+        category: (osm.tags.amenity === 'cafe' ? 'cafe' : 'food') as PlaceCategory,
+        lat: osm.lat,
+        lng: osm.lon,
+      }
+      if (apiAvailable) {
+        try {
+          const created = await apiFetch<Place>(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+          setPlaces((prev) => [...prev, created])
+        } catch {
+          // silently fail
+        }
+      } else {
+        setPlaces((prev) => [...prev, { ...payload, id: crypto.randomUUID(), visitedDates: [] }])
+      }
+    },
+    [apiAvailable]
+  )
+
   const pickOne = () => {
     const eligible = places.filter((p) => filterCategory === 'all' || p.category === filterCategory)
     if (eligible.length === 0) return
@@ -250,12 +366,18 @@ export default function FoodPicker() {
             Loading map…
           </div>
         ) : (
-          <MapContainer center={[20, 0]} zoom={2} style={{ height: '360px' }} scrollWheelZoom>
+          <MapContainer
+            center={MARKHAM}
+            zoom={DEFAULT_ZOOM}
+            style={{ height: '360px' }}
+            scrollWheelZoom
+          >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <MapFitter places={mappablePlaces} />
+            <NearbyMarkers existing={places} onAdd={addFromOsm} />
             {mappablePlaces.map((place) => (
               <Marker
                 key={place.id}
@@ -292,7 +414,7 @@ export default function FoodPicker() {
       </div>
 
       {/* Map legend */}
-      <div className="flex gap-4 mb-6 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex flex-wrap gap-4 mb-6 text-xs text-gray-500 dark:text-gray-400">
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" /> Not visited / &gt;2
           weeks ago
@@ -302,6 +424,10 @@ export default function FoodPicker() {
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-full bg-gray-400 inline-block" /> Last 3 days
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-full bg-violet-400 inline-block" /> Nearby (OSM) — click
+          to add
         </span>
       </div>
 

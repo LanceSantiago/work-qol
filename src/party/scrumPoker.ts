@@ -11,7 +11,6 @@ export default class ScrumPokerServer implements Party.Server {
   constructor(readonly room: Party.Room) {}
 
   onConnect(conn: Party.Connection) {
-    // Send current state to newly connected client
     conn.send(JSON.stringify({ type: 'state', state: this.state }))
   }
 
@@ -27,10 +26,10 @@ export default class ScrumPokerServer implements Party.Server {
             name: msg.name,
             vote: null,
             hasVoted: false,
+            originalVote: null,
           }
           this.state.participants.push(participant)
         } else {
-          // Rejoin (e.g. page refresh) — update name in case it changed
           existing.name = msg.name
         }
         break
@@ -38,7 +37,8 @@ export default class ScrumPokerServer implements Party.Server {
 
       case 'vote': {
         const participant = this.state.participants.find((p) => p.id === sender.id)
-        if (participant && !this.state.revealed) {
+        if (participant) {
+          // Allow re-voting after reveal — originalVote is preserved from reveal snapshot
           participant.vote = msg.card
           participant.hasVoted = true
         }
@@ -47,6 +47,10 @@ export default class ScrumPokerServer implements Party.Server {
 
       case 'reveal': {
         this.state.revealed = true
+        // Snapshot each participant's vote as their originalVote
+        this.state.participants.forEach((p) => {
+          if (p.hasVoted) p.originalVote = p.vote
+        })
         break
       }
 
@@ -56,12 +60,12 @@ export default class ScrumPokerServer implements Party.Server {
         this.state.participants.forEach((p) => {
           p.vote = null
           p.hasVoted = false
+          p.originalVote = null
         })
         break
       }
 
       case 'react': {
-        // Broadcast the reaction to all clients — no state mutation needed
         this.room.broadcast(
           JSON.stringify({
             type: 'reaction',
@@ -70,11 +74,10 @@ export default class ScrumPokerServer implements Party.Server {
             emoji: msg.emoji,
           })
         )
-        return // skip the state broadcast below
+        return
       }
     }
 
-    // Broadcast updated state to all connected clients
     this.room.broadcast(JSON.stringify({ type: 'state', state: this.state }))
   }
 

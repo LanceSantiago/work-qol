@@ -4,7 +4,6 @@ import type { SentryIssue } from '../../../src/types/sentry'
 interface Env {
   SENTRY_AUTH_TOKEN: string
   SENTRY_ORG_SLUG: string
-  SENTRY_PROJECT_SLUG: string
 }
 
 interface SentryApiIssue {
@@ -17,17 +16,18 @@ interface SentryApiIssue {
   firstSeen: string
   permalink: string
   isUnhandled: boolean
+  project: { slug: string; name: string }
 }
 
 export const onRequestGet: PagesFunction<Env> = async (context) => {
-  const { SENTRY_AUTH_TOKEN, SENTRY_ORG_SLUG, SENTRY_PROJECT_SLUG } = context.env
-  if (!SENTRY_AUTH_TOKEN || !SENTRY_ORG_SLUG || !SENTRY_PROJECT_SLUG) {
+  const { SENTRY_AUTH_TOKEN, SENTRY_ORG_SLUG } = context.env
+  if (!SENTRY_AUTH_TOKEN || !SENTRY_ORG_SLUG) {
     return Response.json({ error: 'not_configured' }, { status: 503 })
   }
 
   const url =
-    `https://sentry.io/api/0/projects/${SENTRY_ORG_SLUG}/${SENTRY_PROJECT_SLUG}/issues/` +
-    '?query=is:unresolved&limit=25&statsPeriod=24h&sort=date'
+    `https://sentry.io/api/0/organizations/${SENTRY_ORG_SLUG}/issues/` +
+    '?query=is:unresolved&limit=50&statsPeriod=24h&sort=date'
 
   let res: globalThis.Response
   try {
@@ -54,6 +54,7 @@ export const onRequestGet: PagesFunction<Env> = async (context) => {
     firstSeen: i.firstSeen,
     permalink: i.permalink,
     isUnhandled: i.isUnhandled,
+    project: i.project?.name ?? i.project?.slug ?? 'unknown',
   }))
 
   return Response.json(issues, {
