@@ -1,0 +1,5 @@
+{
+  "name": "work-qol-scrum-poker",
+  "main": "src/party/scrumPoker.ts",
+  "compatibilityDate": "2024-01-01"
+}

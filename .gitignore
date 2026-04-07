@@ -1,3 +1,15 @@
+# Node / Vite
+node_modules/
+dist/
+.partykit/
+
+# Docker
+.dockerignore
+
+# Local environment secrets (never commit these)
+.env.local
+.dev.vars
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

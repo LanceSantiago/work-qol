@@ -1,0 +1,10 @@
+name = "work-qol"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-01-01"
+
+# KV namespace for Food Picker places
+# Create the namespace in the Cloudflare dashboard, then fill in the IDs below
+# [[kv_namespaces]]
+# binding = "PLACES"
+# id = "<production-kv-id>"
+# preview_id = "<preview-kv-id>"

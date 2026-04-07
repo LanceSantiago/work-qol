@@ -1,0 +1,27 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount source for hot reload
+      - .:/app
+      - /app/node_modules
+    env_file:
+      - .env.local
+    environment:
+      - VITE_PARTYKIT_HOST=partykit:1999
+    depends_on:
+      - partykit
+
+  partykit:
+    build:
+      context: .
+      dockerfile: Dockerfile.partykit
+    ports:
+      - "1999:1999"
+    volumes:
+      - .:/app
+      - /app/node_modules
