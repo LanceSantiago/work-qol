@@ -30,7 +30,7 @@ function pinColor(place: Place): string {
 
 // ── Default location: Markham, Ontario ───────────────────────────────────────
 
-const MARKHAM: [number, number] = [43.855, -79.3687]
+const MARKHAM: [number, number] = [43.8489, -79.3467]
 const DEFAULT_ZOOM = 14
 
 // ── Auto-fit map bounds when places change ────────────────────────────────────
