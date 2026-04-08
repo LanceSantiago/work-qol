@@ -1,6 +1,11 @@
 import type * as Party from 'partykit/server'
 import type { ClientMessage, RoomState, Participant } from '../types/scrumPoker'
 
+/**
+ * PartyKit server for the Scrum Poker room.
+ * Maintains the shared `RoomState` in memory and handles join, vote, reveal, reset,
+ * and emoji-reaction messages from connected clients, broadcasting updated state after each change.
+ */
 export default class ScrumPokerServer implements Party.Server {
   private state: RoomState = {
     participants: [],
@@ -10,10 +15,16 @@ export default class ScrumPokerServer implements Party.Server {
 
   constructor(readonly room: Party.Room) {}
 
+  /** Sends the current room state to a newly connected client so they can render immediately. */
   onConnect(conn: Party.Connection) {
     conn.send(JSON.stringify({ type: 'state', state: this.state }))
   }
 
+  /**
+   * Handles incoming client messages. Mutates `this.state` based on message type,
+   * then broadcasts the updated state to all clients (except for `react` which broadcasts
+   * a reaction event directly without updating state).
+   */
   onMessage(message: string, sender: Party.Connection) {
     const msg: ClientMessage = JSON.parse(message)
 
@@ -81,6 +92,7 @@ export default class ScrumPokerServer implements Party.Server {
     this.room.broadcast(JSON.stringify({ type: 'state', state: this.state }))
   }
 
+  /** Removes the disconnected participant from state and broadcasts the updated list. */
   onClose(conn: Party.Connection) {
     this.state.participants = this.state.participants.filter((p) => p.id !== conn.id)
     this.room.broadcast(JSON.stringify({ type: 'state', state: this.state }))

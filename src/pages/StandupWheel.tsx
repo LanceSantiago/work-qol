@@ -1,27 +1,35 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { randomPick } from '../utils/random'
+import { WinnerModal } from '../components/standup/WinnerModal'
+import { NameList } from '../components/standup/NameList'
 
 const TEAM_PRESET = ['Lance', 'Josh', 'Happi', 'Patrik', 'Craig', 'Kana', 'Barry', 'Michael']
 const POLL_INTERVAL = 5000
 
-const COLORS = [
-  '#3b82f6',
-  '#8b5cf6',
-  '#ec4899',
-  '#f97316',
-  '#10b981',
-  '#06b6d4',
-  '#f59e0b',
-  '#ef4444',
-]
-
+/** Shape of the standup state persisted in Cloudflare KV and returned by the `/api/standup` endpoint. */
 interface StandupState {
   names: string[]
   winner: string | null
   spunAt: string | null
 }
 
+/**
+ * Draws the full spinning wheel onto `ctx`. Each name gets a coloured slice,
+ * with the label rendered inside it. Also draws the centre hub and the triangular pointer.
+ * `rotation` is the current rotation offset in radians.
+ */
 function drawWheel(ctx: CanvasRenderingContext2D, names: string[], rotation: number, size: number) {
+  const COLORS = [
+    '#3b82f6',
+    '#8b5cf6',
+    '#ec4899',
+    '#f97316',
+    '#10b981',
+    '#06b6d4',
+    '#f59e0b',
+    '#ef4444',
+  ]
+
   const cx = size / 2
   const cy = size / 2
   const radius = size / 2 - 4
@@ -73,10 +81,17 @@ function drawWheel(ctx: CanvasRenderingContext2D, names: string[], rotation: num
   ctx.fill()
 }
 
+/** Quartic ease-out curve — maps a linear progress value `t` in [0, 1] to a decelerated value. */
 function easeOut(t: number): number {
   return 1 - Math.pow(1 - t, 4)
 }
 
+/**
+ * Interactive spinning wheel page for choosing who runs standup.
+ * Syncs the team name list and the latest spin result with the Cloudflare KV-backed API,
+ * polling every 5 seconds so all open browsers see the same winner in real-time.
+ * Falls back to local-only mode when the KV namespace is not configured.
+ */
 export default function StandupWheel() {
   const [names, setNames] = useState<string[]>([])
   const [input, setInput] = useState('')
@@ -97,6 +112,7 @@ export default function StandupWheel() {
 
   // ── API helpers ──────────────────────────────────────────────────────────────
 
+  /** Fetches the latest standup state from the API and triggers a spin animation if a new winner was set by another client. */
   const fetchState = useCallback(async () => {
     try {
       const res = await fetch('/api/standup')
@@ -124,6 +140,7 @@ export default function StandupWheel() {
     }
   }, [spinning]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  /** Persists the updated name list to the API. */
   const saveNames = async (next: string[]) => {
     setSaving(true)
     try {
@@ -147,6 +164,7 @@ export default function StandupWheel() {
 
   // ── Canvas ───────────────────────────────────────────────────────────────────
 
+  /** Redraws the wheel canvas at the given rotation angle. No-op when there are no names. */
   const redraw = useCallback(
     (rotation: number) => {
       const canvas = canvasRef.current
@@ -200,6 +218,10 @@ export default function StandupWheel() {
 
   // ── Spin animation ───────────────────────────────────────────────────────────
 
+  /**
+   * Runs the spin animation, rotating the wheel to land precisely on `picked`
+   * using a quartic ease-out curve over a randomised duration.
+   */
   const triggerSpin = useCallback(
     (currentNames: string[], picked: string) => {
       if (spinning || currentNames.length < 2) return
@@ -247,6 +269,10 @@ export default function StandupWheel() {
     [spinning, redraw]
   )
 
+  /**
+   * Picks a random name, persists the winner to the API so other clients see the result,
+   * then starts the local spin animation. Spins locally if the API call fails.
+   */
   const spin = async () => {
     if (spinning || names.length < 2) return
     const picked = randomPick(names)
@@ -269,6 +295,7 @@ export default function StandupWheel() {
 
   // ── Name management ──────────────────────────────────────────────────────────
 
+  /** Adds the current input value to the name list and persists the change, if the name is non-empty and not a duplicate. */
   const addName = () => {
     const trimmed = input.trim()
     if (!trimmed || names.includes(trimmed)) return
@@ -279,6 +306,7 @@ export default function StandupWheel() {
     saveNames(next)
   }
 
+  /** Removes `name` from the list and persists the change. */
   const removeName = (name: string) => {
     const next = names.filter((n) => n !== name)
     setNames(next)
@@ -286,6 +314,7 @@ export default function StandupWheel() {
     saveNames(next)
   }
 
+  /** Replaces the current name list with the hardcoded team preset and persists it. */
   const loadPreset = () => {
     setNames(TEAM_PRESET)
     setWinner(null)
@@ -340,110 +369,20 @@ export default function StandupWheel() {
           )}
         </div>
 
-        {/* Name list */}
-        <div className="flex-1 w-full max-w-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Team members</h2>
-            <button
-              onClick={loadPreset}
-              className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors"
-            >
-              Load team preset
-            </button>
-          </div>
-
-          <div className="flex gap-2 mb-4">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addName()}
-              placeholder="Add a name…"
-              className="flex-1 px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={addName}
-              disabled={!input.trim() || saving}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-sm font-medium transition-colors"
-            >
-              Add
-            </button>
-          </div>
-
-          {names.length === 0 ? (
-            <p className="text-sm text-gray-400 dark:text-gray-500">No names yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {names.map((name, i) => (
-                <li
-                  key={name}
-                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-3 h-3 rounded-full shrink-0"
-                      style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                    />
-                    <span className="text-sm">{name}</span>
-                  </div>
-                  <button
-                    onClick={() => removeName(name)}
-                    aria-label={`Remove ${name}`}
-                    className="text-gray-400 hover:text-red-500 transition-colors text-lg leading-none"
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {names.length === 1 && (
-            <p className="mt-3 text-xs text-gray-400 dark:text-gray-500">
-              Add at least one more name to spin.
-            </p>
-          )}
-        </div>
+        <NameList
+          names={names}
+          input={input}
+          saving={saving}
+          onInputChange={setInput}
+          onAdd={addName}
+          onRemove={removeName}
+          onLoadPreset={loadPreset}
+        />
       </div>
 
       {/* Winner modal */}
       {winner && !spinning && (
-        <div
-          role="presentation"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          onClick={() => setWinner(null)}
-          onKeyDown={(e) => e.key === 'Escape' && setWinner(null)}
-        >
-          <div
-            role="presentation"
-            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl px-12 py-10 flex flex-col items-center gap-3 animate-[winner-pop_0.35s_ease-out]"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
-            <p className="text-5xl">🎉</p>
-            <p className="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-              Running standup today
-            </p>
-            <p className="text-4xl font-bold text-gray-900 dark:text-gray-100">{winner}</p>
-            <div className="mt-4 flex gap-3">
-              <button
-                onClick={() => setWinner(null)}
-                className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
-              >
-                Dismiss
-              </button>
-              <button
-                onClick={() => {
-                  removeName(winner)
-                  setWinner(null)
-                }}
-                className="px-6 py-2 rounded-xl bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/70 text-red-600 dark:text-red-400 font-medium transition-colors"
-              >
-                Remove from wheel
-              </button>
-            </div>
-          </div>
-        </div>
+        <WinnerModal winner={winner} onDismiss={() => setWinner(null)} onRemove={removeName} />
       )}
     </div>
   )

@@ -1,3 +1,4 @@
+/** Represents a single on-call shift entry returned by the `/api/pagerduty/oncall` endpoint. */
 export interface OnCallEntry {
   userId: string
   userName: string
@@ -10,6 +11,7 @@ export interface OnCallEntry {
   end: string | null
 }
 
+/** Represents an active PagerDuty incident returned by the `/api/pagerduty/incidents` endpoint. */
 export interface Incident {
   id: string
   title: string
@@ -20,6 +22,7 @@ export interface Incident {
   htmlUrl: string
 }
 
+/** Standard error envelope returned by API routes when a request fails. */
 export interface ApiError {
   error: string
 }

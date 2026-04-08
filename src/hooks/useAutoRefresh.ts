@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 
+/** Return value of `useAutoRefresh`, providing data, request status, and a manual refresh trigger. */
 export interface UseAutoRefreshResult<T> {
   data: T | null
   loading: boolean

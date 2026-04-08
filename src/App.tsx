@@ -9,6 +9,7 @@ import PagerDuty from './pages/PagerDuty'
 import SentryViewer from './pages/SentryViewer'
 import GithubPRs from './pages/GithubPRs'
 
+/** Root application component. Sets up client-side routing and the global toast notification provider. */
 export default function App() {
   return (
     <BrowserRouter>

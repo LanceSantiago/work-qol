@@ -2,6 +2,7 @@ import { useAutoRefresh } from '../hooks/useAutoRefresh'
 import { formatRelative } from '../utils/dates'
 import type { PullRequest } from '../types/github'
 
+/** Animated placeholder row shown while PR data is loading. Renders 4 gray blocks matching the table columns. */
 function SkeletonRow() {
   return (
     <tr className="animate-pulse">
@@ -21,6 +22,11 @@ function SkeletonRow() {
   )
 }
 
+/**
+ * Displays all open pull requests across configured repos, auto-refreshing every 5 minutes.
+ * Shows summary stats (total, drafts, stale), a stale warning banner, and a sortable table.
+ * PRs open for more than 2 days are flagged as stale.
+ */
 export default function GithubPRs() {
   const { data, loading, error, lastUpdated, refresh } = useAutoRefresh<PullRequest[]>(
     '/api/github/prs',

@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react'
 
+/**
+ * Manages the dark mode preference, persisting it to localStorage and
+ * syncing the `dark` class on the document root element.
+ * Returns the current dark mode state and a toggle function.
+ */
 export function useDarkMode() {
   const [isDark, setIsDark] = useState<boolean>(() => {
     const stored = localStorage.getItem('darkMode')

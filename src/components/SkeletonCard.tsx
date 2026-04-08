@@ -2,6 +2,10 @@ interface Props {
   lines?: number
 }
 
+/**
+ * Animated placeholder card used as a loading skeleton.
+ * Renders a title-width bar followed by `lines` content-width bars with a pulse animation.
+ */
 export default function SkeletonCard({ lines = 2 }: Props) {
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 animate-pulse">

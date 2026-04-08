@@ -11,6 +11,11 @@ const navLinks = [
   { to: '/github', label: 'GitHub PRs' },
 ]
 
+/**
+ * Top-level page shell. Renders the sticky navigation bar with links to all
+ * app pages, a dark-mode toggle, and an `<Outlet>` where the active route's
+ * content is displayed.
+ */
 export default function Layout() {
   const { isDark, toggle } = useDarkMode()
 
@@ -22,7 +27,7 @@ export default function Layout() {
             <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
               <img
                 src="/logo.png"
-                alt="TrackRevenue"
+                alt="Track Revenue"
                 className="h-6 mr-3 shrink-0 dark:brightness-90"
               />
               {navLinks.map(({ to, label, end }) => (
