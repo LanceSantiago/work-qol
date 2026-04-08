@@ -16,3 +16,11 @@ export const CATEGORY_LABELS: Record<PlaceCategory, string> = {
   activity: '🎯 Activity',
   other: '📍 Other',
 }
+
+/** Raw node shape returned by the Overpass API. */
+export interface OsmPlace {
+  id: number
+  lat: number
+  lon: number
+  tags: { name?: string; amenity?: string; cuisine?: string; 'addr:full'?: string }
+}
