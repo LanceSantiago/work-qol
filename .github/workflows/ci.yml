@@ -33,3 +33,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Deploy PartyKit
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: npm run party:deploy
+        env:
+          PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
