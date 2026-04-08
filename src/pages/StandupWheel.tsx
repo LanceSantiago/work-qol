@@ -87,9 +87,11 @@ export default function StandupWheel() {
 
   // Track the last spunAt we've seen so we don't re-trigger our own spin
   const lastSpunAtRef = useRef<string | null>(null)
+  const initializedRef = useRef(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rotationRef = useRef(0)
   const animFrameRef = useRef<number | null>(null)
+  const idleAnimRef = useRef<number | null>(null)
 
   const CANVAS_SIZE = 340
 
@@ -104,6 +106,13 @@ export default function StandupWheel() {
       }
       const state: StandupState = await res.json()
       setNames(state.names)
+
+      // On first load, record the current spunAt so we don't replay a past spin
+      if (!initializedRef.current) {
+        initializedRef.current = true
+        lastSpunAtRef.current = state.spunAt
+        return
+      }
 
       // If a new spin came in from someone else, show the winner modal
       if (state.winner && state.spunAt && state.spunAt !== lastSpunAtRef.current && !spinning) {
@@ -163,6 +172,31 @@ export default function StandupWheel() {
       if (animFrameRef.current !== null) cancelAnimationFrame(animFrameRef.current)
     }
   }, [])
+
+  // Idle slow rotation
+  useEffect(() => {
+    if (spinning || names.length === 0) {
+      if (idleAnimRef.current !== null) {
+        cancelAnimationFrame(idleAnimRef.current)
+        idleAnimRef.current = null
+      }
+      return
+    }
+
+    const tick = () => {
+      rotationRef.current += 0.001
+      redraw(rotationRef.current)
+      idleAnimRef.current = requestAnimationFrame(tick)
+    }
+    idleAnimRef.current = requestAnimationFrame(tick)
+
+    return () => {
+      if (idleAnimRef.current !== null) {
+        cancelAnimationFrame(idleAnimRef.current)
+        idleAnimRef.current = null
+      }
+    }
+  }, [spinning, names.length, redraw])
 
   // ── Spin animation ───────────────────────────────────────────────────────────
 
