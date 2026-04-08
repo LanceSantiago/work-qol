@@ -39,3 +39,4 @@ jobs:
         run: npm run party:deploy
         env:
           PARTYKIT_TOKEN: ${{ secrets.PARTYKIT_TOKEN }}
+          PARTYKIT_LOGIN: lancesantiago
