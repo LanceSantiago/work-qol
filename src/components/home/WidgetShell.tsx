@@ -13,7 +13,16 @@ export function WidgetShell({
   children?: React.ReactNode
   disabled?: boolean
 }) {
-  if (disabled) return null
+  if (disabled) {
+    return (
+      <div className="block rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 opacity-50">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
+          {title}
+        </p>
+        <p className="text-sm text-gray-400 dark:text-gray-600 italic">Not configured</p>
+      </div>
+    )
+  }
 
   return (
     <Link
