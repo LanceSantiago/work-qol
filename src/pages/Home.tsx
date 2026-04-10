@@ -33,18 +33,21 @@ const tools = [
     label: 'PagerDuty',
     description: "See who's on call and active incidents.",
     icon: '📟',
+    disabled: true,
   },
   {
     to: '/sentry',
     label: 'Sentry',
     description: 'Monitor unresolved errors across your projects.',
     icon: '🐛',
+    disabled: true,
   },
   {
     to: '/github',
     label: 'GitHub PRs',
     description: 'Open pull requests across all configured repos.',
     icon: '🐙',
+    disabled: true,
   },
 ]
 
@@ -62,16 +65,16 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <ErrorBoundary title="Incidents widget failed">
-            <IncidentsWidget />
+            <IncidentsWidget disabled />
           </ErrorBoundary>
           <ErrorBoundary title="On-call widget failed">
-            <OnCallWidget />
+            <OnCallWidget disabled />
           </ErrorBoundary>
           <ErrorBoundary title="Sentry widget failed">
-            <SentryWidget />
+            <SentryWidget disabled />
           </ErrorBoundary>
           <ErrorBoundary title="GitHub widget failed">
-            <GithubWidget />
+            <GithubWidget disabled />
           </ErrorBoundary>
         </div>
         <LastRefreshHint />
@@ -83,19 +86,33 @@ export default function Home() {
           Tools
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tools.map(({ to, label, description, icon }) => (
-            <Link
-              key={to}
-              to={to}
-              className="group rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all"
-            >
-              <div className="text-3xl mb-3">{icon}</div>
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {label}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{description}</p>
-            </Link>
-          ))}
+          {tools.map(({ to, label, description, icon, disabled }) =>
+            disabled ? (
+              <div
+                key={to}
+                className="relative rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 opacity-50"
+              >
+                <span className="absolute top-3 right-3 text-xs px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500">
+                  No token
+                </span>
+                <div className="text-3xl mb-3">{icon}</div>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100">{label}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{description}</p>
+              </div>
+            ) : (
+              <Link
+                key={to}
+                to={to}
+                className="group rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all"
+              >
+                <div className="text-3xl mb-3">{icon}</div>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {label}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{description}</p>
+              </Link>
+            )
+          )}
         </div>
       </section>
     </div>

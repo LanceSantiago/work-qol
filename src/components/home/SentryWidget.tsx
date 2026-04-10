@@ -2,9 +2,7 @@ import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import type { SentryIssue } from '../../types/sentry'
 import { WidgetShell } from './WidgetShell'
 
-// ── Sentry widget ─────────────────────────────────────────────────────────────
-
-export function SentryWidget() {
+function SentryWidgetContent() {
   const { data, loading, error } = useAutoRefresh<SentryIssue[]>('/api/sentry/issues', 60 * 1000)
 
   if (loading && !data) {
@@ -40,4 +38,9 @@ export function SentryWidget() {
       </p>
     </WidgetShell>
   )
+}
+
+export function SentryWidget({ disabled }: { disabled?: boolean }) {
+  if (disabled) return <WidgetShell title="Sentry Errors" to="/sentry" disabled />
+  return <SentryWidgetContent />
 }

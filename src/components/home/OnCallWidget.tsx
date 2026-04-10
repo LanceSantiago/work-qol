@@ -2,9 +2,7 @@ import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import type { OnCallEntry } from '../../types/pagerduty'
 import { WidgetShell } from './WidgetShell'
 
-// ── On-call widget ────────────────────────────────────────────────────────────
-
-export function OnCallWidget() {
+function OnCallWidgetContent() {
   const { data, loading, error } = useAutoRefresh<OnCallEntry[]>(
     '/api/pagerduty/oncall',
     5 * 60 * 1000
@@ -43,4 +41,9 @@ export function OnCallWidget() {
       )}
     </WidgetShell>
   )
+}
+
+export function OnCallWidget({ disabled }: { disabled?: boolean }) {
+  if (disabled) return <WidgetShell title="Who's On Call" to="/pagerduty" disabled />
+  return <OnCallWidgetContent />
 }

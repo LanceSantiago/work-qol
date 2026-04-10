@@ -2,9 +2,7 @@ import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import type { Incident } from '../../types/pagerduty'
 import { WidgetShell } from './WidgetShell'
 
-// ── Incidents widget ──────────────────────────────────────────────────────────
-
-export function IncidentsWidget() {
+function IncidentsWidgetContent() {
   const { data, loading, error } = useAutoRefresh<Incident[]>('/api/pagerduty/incidents', 60 * 1000)
 
   if (loading && !data) {
@@ -38,4 +36,9 @@ export function IncidentsWidget() {
       </p>
     </WidgetShell>
   )
+}
+
+export function IncidentsWidget({ disabled }: { disabled?: boolean }) {
+  if (disabled) return <WidgetShell title="Active Incidents" to="/pagerduty" disabled />
+  return <IncidentsWidgetContent />
 }

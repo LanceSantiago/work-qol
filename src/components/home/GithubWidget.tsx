@@ -2,9 +2,7 @@ import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import type { PullRequest } from '../../types/github'
 import { WidgetShell } from './WidgetShell'
 
-// ── GitHub widget ─────────────────────────────────────────────────────────────
-
-export function GithubWidget() {
+function GithubWidgetContent() {
   const { data, loading, error } = useAutoRefresh<PullRequest[]>('/api/github/prs', 5 * 60 * 1000)
 
   if (loading && !data) {
@@ -38,4 +36,9 @@ export function GithubWidget() {
       </p>
     </WidgetShell>
   )
+}
+
+export function GithubWidget({ disabled }: { disabled?: boolean }) {
+  if (disabled) return <WidgetShell title="Open PRs" to="/github" disabled />
+  return <GithubWidgetContent />
 }

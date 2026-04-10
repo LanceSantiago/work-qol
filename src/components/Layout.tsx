@@ -6,9 +6,9 @@ const navLinks = [
   { to: '/scrum-poker', label: 'Scrum Poker' },
   { to: '/standup-wheel', label: 'Standup Wheel' },
   { to: '/food-picker', label: 'Food Picker' },
-  { to: '/pagerduty', label: 'PagerDuty' },
-  { to: '/sentry', label: 'Sentry' },
-  { to: '/github', label: 'GitHub PRs' },
+  { to: '/pagerduty', label: 'PagerDuty', disabled: true },
+  { to: '/sentry', label: 'Sentry', disabled: true },
+  { to: '/github', label: 'GitHub PRs', disabled: true },
   { to: '/claude-stats', label: 'Claude Stats' },
 ]
 
@@ -31,23 +31,33 @@ export default function Layout() {
                 alt="Track Revenue"
                 className="h-6 mr-3 shrink-0 dark:brightness-90"
               />
-              {navLinks.map(({ to, label, end }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={end}
-                  className={({ isActive }) =>
-                    [
-                      'px-3 py-1.5 rounded-md text-sm font-medium shrink-0 transition-colors',
-                      isActive
-                        ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800',
-                    ].join(' ')
-                  }
-                >
-                  {label}
-                </NavLink>
-              ))}
+              {navLinks.map(({ to, label, end, disabled }) =>
+                disabled ? (
+                  <span
+                    key={to}
+                    title="Not configured — token missing"
+                    className="px-3 py-1.5 rounded-md text-sm font-medium shrink-0 text-gray-400 dark:text-gray-600 cursor-default select-none"
+                  >
+                    {label}
+                  </span>
+                ) : (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end={end}
+                    className={({ isActive }) =>
+                      [
+                        'px-3 py-1.5 rounded-md text-sm font-medium shrink-0 transition-colors',
+                        isActive
+                          ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800',
+                      ].join(' ')
+                    }
+                  >
+                    {label}
+                  </NavLink>
+                )
+              )}
             </div>
             <button
               onClick={toggle}
