@@ -7,3 +7,6 @@ SENTRY_ORG_SLUG=
 SENTRY_PROJECT_SLUG=
 GITHUB_TOKEN=
 GITHUB_REPOS=myorg/repo1,myorg/repo2,myorg/repo3
+CLAUDE_STATS_TOKEN=local-dev-token
+CLAUDE_STATS_URL_PROD=https://your-app.pages.dev/api/claude-stats
+CLAUDE_STATS_TOKEN_PROD=your-prod-token

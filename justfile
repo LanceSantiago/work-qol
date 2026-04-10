@@ -101,6 +101,6 @@ prod-build:
 push-stats:
     powershell -ExecutionPolicy Bypass -File scripts/push-claude-stats.ps1
 
-# Push to production (set CLAUDE_STATS_URL and CLAUDE_STATS_TOKEN env vars first)
+# Push to production (reads creds from .dev.vars automatically)
 push-stats-prod:
-    powershell -ExecutionPolicy Bypass -File scripts/push-claude-stats.ps1
+    powershell -ExecutionPolicy Bypass -File scripts/push-claude-stats.ps1 -Prod

@@ -62,7 +62,7 @@ export default function ClaudeStats() {
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
         All-time Claude Code token usage per team member. Run{' '}
         <code className="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-          just push-stats
+          just push-stats-prod
         </code>{' '}
         to sync the latest data from your machine.
       </p>
@@ -89,7 +89,7 @@ export default function ClaudeStats() {
           <p className="text-sm text-gray-400 dark:text-gray-500">
             Run{' '}
             <code className="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
-              just push-stats
+              just push-stats-prod
             </code>{' '}
             to sync your Claude Code usage data.
           </p>
