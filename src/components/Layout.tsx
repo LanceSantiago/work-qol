@@ -32,15 +32,7 @@ export default function Layout() {
                 className="h-6 mr-3 shrink-0 dark:brightness-90"
               />
               {navLinks.map(({ to, label, end, disabled }) =>
-                disabled ? (
-                  <span
-                    key={to}
-                    title="Not configured — token missing"
-                    className="px-3 py-1.5 rounded-md text-sm font-medium shrink-0 text-gray-400 dark:text-gray-600 cursor-default select-none"
-                  >
-                    {label}
-                  </span>
-                ) : (
+                disabled ? null : (
                   <NavLink
                     key={to}
                     to={to}
