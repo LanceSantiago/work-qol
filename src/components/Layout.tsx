@@ -9,6 +9,7 @@ const navLinks = [
   { to: '/pagerduty', label: 'PagerDuty' },
   { to: '/sentry', label: 'Sentry' },
   { to: '/github', label: 'GitHub PRs' },
+  { to: '/claude-stats', label: 'Claude Stats' },
 ]
 
 /**

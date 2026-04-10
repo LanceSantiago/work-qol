@@ -94,3 +94,13 @@ deploy-party:
 # Production build
 prod-build:
     npm run build
+
+# ── Claude Stats ──────────────────────────────────────────────────────────────
+
+# Push local Claude Code stats to the dashboard (requires pages:dev or prod to be running)
+push-stats:
+    powershell -ExecutionPolicy Bypass -File scripts/push-claude-stats.ps1
+
+# Push to production (set CLAUDE_STATS_URL and CLAUDE_STATS_TOKEN env vars first)
+push-stats-prod:
+    powershell -ExecutionPolicy Bypass -File scripts/push-claude-stats.ps1
