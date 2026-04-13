@@ -21,6 +21,7 @@ const NAME_KEY = 'scrum-poker-name'
 export default function ScrumPoker() {
   const [name, setName] = useState(() => localStorage.getItem(NAME_KEY) ?? '')
   const [joined, setJoined] = useState(false)
+  const [isSpectator, setIsSpectator] = useState(false)
   const [roomState, setRoomState] = useState<RoomState | null>(null)
   const [myVote, setMyVote] = useState<CardValue | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
@@ -98,9 +99,15 @@ export default function ScrumPoker() {
     setJoined(true)
   }
 
+  /** Connects to the room as a spectator — receives state but does not join as a participant. */
+  const watchOnly = () => {
+    setIsSpectator(true)
+    setJoined(true)
+  }
+
   /** Optimistically updates the local selected card and broadcasts the vote to the room. */
   const castVote = (card: CardValue) => {
-    if (!joined) return
+    if (!joined || isSpectator) return
     setMyVote(card)
     socket.send(JSON.stringify({ type: 'vote', card }))
   }
@@ -154,6 +161,12 @@ export default function ScrumPoker() {
           >
             Join Session
           </button>
+          <button
+            onClick={watchOnly}
+            className="w-full py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          >
+            Watch only (spectator)
+          </button>
         </div>
       </div>
     )
@@ -166,7 +179,7 @@ export default function ScrumPoker() {
   const arranged = arrangeSeatOrder(participants, myIdRef.current)
   const seatPositions = getSeatPositions(arranged.length)
 
-  const cardDeck = (
+  const cardDeck = !isSpectator ? (
     <section className="shrink-0 pb-4">
       <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
         {cardsVisible ? 'Change your vote' : 'Your vote'}
@@ -182,7 +195,7 @@ export default function ScrumPoker() {
         ))}
       </div>
     </section>
-  )
+  ) : null
 
   return (
     // Outer: fixed viewport height, scrollable only in presenter mode
@@ -272,6 +285,7 @@ export default function ScrumPoker() {
               countdown={countdown}
               onReveal={reveal}
               onReset={reset}
+              isSpectator={isSpectator}
             />
           </div>
         </div>

@@ -59,7 +59,7 @@ export function PlayerSeat({
         <FlipCard
           hasVoted={participant.hasVoted}
           vote={participant.vote}
-          visible={cardsVisible && participant.hasVoted}
+          visible={cardsVisible}
           isMe={isMe}
           presenterMode={presenterMode}
           delay={index * 80}

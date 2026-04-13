@@ -59,7 +59,7 @@ export function FlipCard({
               : 'bg-white dark:bg-gray-100 border-gray-200 text-gray-900',
           ].join(' ')}
         >
-          <span className="text-lg font-bold">{vote ?? '?'}</span>
+          <span className="text-lg font-bold">{hasVoted ? (vote ?? '?') : '—'}</span>
         </div>
       </div>
     </div>
