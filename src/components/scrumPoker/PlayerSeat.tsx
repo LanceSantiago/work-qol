@@ -14,6 +14,7 @@ export function PlayerSeat({
   participant,
   cardsVisible,
   isMe,
+  isSpectator,
   presenterMode,
   x,
   y,
@@ -24,6 +25,7 @@ export function PlayerSeat({
   participant: Participant
   cardsVisible: boolean
   isMe: boolean
+  isSpectator: boolean
   presenterMode: boolean
   x: number
   y: number
@@ -35,11 +37,13 @@ export function PlayerSeat({
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const handleMouseEnter = () => {
+    if (isSpectator) return
     if (hideTimer.current) clearTimeout(hideTimer.current)
     setPickerVisible(true)
   }
 
   const handleMouseLeave = () => {
+    if (isSpectator) return
     hideTimer.current = setTimeout(() => setPickerVisible(false), 600)
   }
 
@@ -65,7 +69,7 @@ export function PlayerSeat({
           delay={index * 80}
           cardRef={cardRef}
         />
-        {!isMe && (
+        {!isMe && !isSpectator && (
           <ReactionPicker
             visible={pickerVisible}
             onPick={(emoji) => onReact(participant.id, emoji)}

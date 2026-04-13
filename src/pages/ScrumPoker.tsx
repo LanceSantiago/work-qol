@@ -213,42 +213,44 @@ export default function ScrumPoker() {
             <h1 className="text-2xl font-bold">Scrum Poker</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">Round {round}</p>
           </div>
-          <div className="flex flex-col items-end gap-1">
-            <button
-              onClick={() => setPresenterMode((m) => !m)}
-              title={presenterMode ? 'Exit presenter mode' : 'Enter presenter mode'}
-              className={[
-                'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border',
-                presenterMode
-                  ? 'bg-blue-600 border-blue-500 text-white'
-                  : 'bg-transparent border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500',
-              ].join(' ')}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          {!isSpectator && (
+            <div className="flex flex-col items-end gap-1">
+              <button
+                onClick={() => setPresenterMode((m) => !m)}
+                title={presenterMode ? 'Exit presenter mode' : 'Enter presenter mode'}
+                className={[
+                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border',
+                  presenterMode
+                    ? 'bg-blue-600 border-blue-500 text-white'
+                    : 'bg-transparent border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500',
+                ].join(' ')}
               >
-                <rect x="2" y="3" width="20" height="14" rx="2" />
-                <line x1="8" y1="21" x2="16" y2="21" />
-                <line x1="12" y1="17" x2="12" y2="21" />
-              </svg>
-              {presenterMode ? 'Presenting' : 'Present'}
-            </button>
-            {cardsVisible && (
-              <p className="text-xs text-blue-500 dark:text-blue-400 font-medium text-right">
-                {presenterMode
-                  ? 'Cards revealed — scroll down to vote'
-                  : 'Cards revealed — click any card to change your vote'}
-              </p>
-            )}
-          </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <line x1="8" y1="21" x2="16" y2="21" />
+                  <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+                {presenterMode ? 'Presenting' : 'Present'}
+              </button>
+              {cardsVisible && (
+                <p className="text-xs text-blue-500 dark:text-blue-400 font-medium text-right">
+                  {presenterMode
+                    ? 'Cards revealed — scroll down to vote'
+                    : 'Cards revealed — click any card to change your vote'}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Table arena */}
@@ -259,6 +261,7 @@ export default function ScrumPoker() {
               participant={participant}
               cardsVisible={cardsVisible}
               isMe={participant.id === myIdRef.current}
+              isSpectator={isSpectator}
               presenterMode={presenterMode}
               x={seatPositions[i][0]}
               y={seatPositions[i][1]}
