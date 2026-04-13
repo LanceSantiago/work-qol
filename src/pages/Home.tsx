@@ -59,7 +59,7 @@ export default function Home() {
       <TabTitleBadge />
 
       {/* Live status widgets */}
-      <section className="mb-10">
+      <section className="mb-6 sm:mb-10">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-4">
           Live Status
         </h2>
@@ -91,13 +91,17 @@ export default function Home() {
               <Link
                 key={to}
                 to={to}
-                className="group rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all"
+                className="group flex sm:flex-col items-center sm:items-start gap-4 sm:gap-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all"
               >
-                <div className="text-3xl mb-3">{icon}</div>
-                <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                  {label}
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{description}</p>
+                <div className="text-3xl shrink-0 sm:mb-3">{icon}</div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {label}
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
+                    {description}
+                  </p>
+                </div>
               </Link>
             )
           )}
