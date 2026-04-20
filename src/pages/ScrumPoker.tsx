@@ -31,6 +31,8 @@ export default function ScrumPoker() {
   const myIdRef = useRef<string | null>(null)
   const prevRevealedRef = useRef(false)
   const cardEls = useRef<Map<string, HTMLElement>>(new Map())
+  const lastToVoteNotifiedRef = useRef(false)
+  const [showLastToVoteAlert, setShowLastToVoteAlert] = useState(false)
 
   const setCardRef = useCallback(
     (id: string) => (el: HTMLElement | null) => {
@@ -78,6 +80,25 @@ export default function ScrumPoker() {
   useEffect(() => {
     myIdRef.current = socket.id
   }, [socket.id])
+
+  // Notify the last person to vote when everyone else has voted (4+ participants only)
+  useEffect(() => {
+    if (!roomState || roomState.revealed || isSpectator) return
+    const ps = roomState.participants
+    if (ps.length < 4) return
+    const me = ps.find((p) => p.id === myIdRef.current)
+    if (!me || me.hasVoted) {
+      lastToVoteNotifiedRef.current = false
+      setShowLastToVoteAlert(false)
+      return
+    }
+    const othersAllVoted = ps.filter((p) => p.id !== myIdRef.current).every((p) => p.hasVoted)
+    if (othersAllVoted && !lastToVoteNotifiedRef.current) {
+      lastToVoteNotifiedRef.current = true
+      const timer = setTimeout(() => setShowLastToVoteAlert(true), 15_000)
+      return () => clearTimeout(timer)
+    }
+  }, [roomState, isSpectator])
 
   // Countdown timer: 3 → 2 → 1 → 0 → show cards
   useEffect(() => {
@@ -205,6 +226,18 @@ export default function ScrumPoker() {
         overflowY: presenterMode ? 'auto' : 'hidden',
       }}
     >
+      {showLastToVoteAlert && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500 text-white text-sm font-semibold shadow-lg animate-[bounce_0.6s_ease-in-out_3]">
+          <span>Everyone&apos;s waiting on you — cast your vote!</span>
+          <button
+            onClick={() => setShowLastToVoteAlert(false)}
+            className="text-white/70 hover:text-white text-base leading-none"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       {/* Inner flex layout always has a defined height so flex-1 works correctly */}
       <div className="flex flex-col" style={{ height: 'calc(100dvh - 7.5rem)' }}>
         {/* Header */}
@@ -288,7 +321,6 @@ export default function ScrumPoker() {
               countdown={countdown}
               onReveal={reveal}
               onReset={reset}
-              isSpectator={isSpectator}
             />
           </div>
         </div>

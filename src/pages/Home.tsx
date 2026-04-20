@@ -68,7 +68,7 @@ export default function Home() {
             <IncidentsWidget disabled />
           </ErrorBoundary>
           <ErrorBoundary title="On-call widget failed">
-            <OnCallWidget disabled />
+            <OnCallWidget />
           </ErrorBoundary>
           <ErrorBoundary title="Sentry widget failed">
             <SentryWidget disabled />

@@ -11,8 +11,8 @@ export default function PagerDuty() {
       <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
         On-call schedule and active incidents. Refreshes automatically.
       </p>
-      <OnCallSection />
       <IncidentsSection />
+      <OnCallSection />
     </div>
   )
 }

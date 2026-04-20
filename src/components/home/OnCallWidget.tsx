@@ -1,6 +1,5 @@
 import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import type { OnCallEntry } from '../../types/pagerduty'
-import { getSentryOnCall } from '../../utils/sentry'
 import { WidgetShell } from './WidgetShell'
 
 function OnCallWidgetContent() {
@@ -26,8 +25,14 @@ function OnCallWidgetContent() {
     )
   }
 
-  const primary = data?.[0]
-  const sentryPerson = getSentryOnCall()
+  const now = Date.now()
+  const primary = data?.find(
+    (e) =>
+      e.escalationPolicyName === 'NA+APAC Escalation Policy (2024)' &&
+      e.scheduleName === 'On-Call Primary (2024)' &&
+      (!e.start || new Date(e.start).getTime() <= now) &&
+      (!e.end || new Date(e.end).getTime() >= now)
+  )
 
   return (
     <WidgetShell title="Who's On Call" to="/pagerduty">
@@ -39,14 +44,8 @@ function OnCallWidgetContent() {
           </p>
         </>
       ) : (
-        <p className="text-xs text-gray-500 dark:text-gray-400">No schedule found</p>
+        <p className="text-xs text-red-500 dark:text-red-400">Failed to load</p>
       )}
-      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
-          Sentry
-        </p>
-        <p className="font-semibold text-gray-900 dark:text-gray-100">{sentryPerson}</p>
-      </div>
     </WidgetShell>
   )
 }

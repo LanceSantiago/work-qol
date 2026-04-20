@@ -7,7 +7,7 @@ const navLinks = [
   { to: '/scrum-poker', label: 'Scrum Poker' },
   { to: '/standup-wheel', label: 'Standup Wheel' },
   { to: '/food-picker', label: 'Food Picker' },
-  { to: '/pagerduty', label: 'PagerDuty', disabled: true },
+  { to: '/pagerduty', label: 'PagerDuty' },
   { to: '/sentry', label: 'Sentry', disabled: true },
   { to: '/github', label: 'GitHub PRs', disabled: true },
   { to: '/claude-stats', label: 'Claude Stats' },
@@ -52,7 +52,13 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
-            <img src="/logo.png" alt="Track Revenue" className="h-6 shrink-0 dark:brightness-90" />
+            <NavLink to="/">
+              <img
+                src="/logo.png"
+                alt="Track Revenue"
+                className="h-6 shrink-0 dark:brightness-90"
+              />
+            </NavLink>
 
             {/* Desktop nav links */}
             <div className="hidden lg:flex items-center gap-1 ml-4 flex-1 overflow-x-auto scrollbar-hide">

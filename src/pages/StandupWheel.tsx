@@ -3,7 +3,7 @@ import { randomPick } from '../utils/random'
 import { WinnerModal } from '../components/standup/WinnerModal'
 import { SentryDutyModal } from '../components/standup/SentryDutyModal'
 import { NameList } from '../components/standup/NameList'
-import { getSentryOnCall, isMonday } from '../utils/sentry'
+import { getSentryOnCall } from '../utils/sentry'
 
 const TEAM_PRESET = ['Lance', 'Josh', 'Happi', 'Patrik', 'Craig', 'Kana', 'Barry', 'Michael']
 const POLL_INTERVAL = 5000
@@ -102,7 +102,6 @@ export default function StandupWheel() {
   const [saving, setSaving] = useState(false)
   const [configured, setConfigured] = useState(true)
   const [sentryDutyPerson, setSentryDutyPerson] = useState<string | null>(null)
-
   // Track the last spunAt we've seen so we don't re-trigger our own spin
   const lastSpunAtRef = useRef<string | null>(null)
   const initializedRef = useRef(false)
@@ -264,7 +263,7 @@ export default function StandupWheel() {
         } else {
           setSpinning(false)
           setWinner(picked)
-          if (isMonday()) setSentryDutyPerson(getSentryOnCall())
+          setSentryDutyPerson(getSentryOnCall())
         }
       }
 
@@ -389,7 +388,7 @@ export default function StandupWheel() {
         <WinnerModal winner={winner} onDismiss={() => setWinner(null)} onRemove={removeName} />
       )}
 
-      {/* Sentry duty modal — shown on Mondays after winner modal is dismissed */}
+      {/* Sentry duty modal — shown after winner modal is dismissed */}
       {!winner && sentryDutyPerson && (
         <SentryDutyModal person={sentryDutyPerson} onDismiss={() => setSentryDutyPerson(null)} />
       )}

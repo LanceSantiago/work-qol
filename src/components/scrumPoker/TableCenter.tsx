@@ -16,14 +16,12 @@ export function TableCenter({
   countdown,
   onReveal,
   onReset,
-  isSpectator = false,
 }: {
   participants: Participant[]
   cardsVisible: boolean
   countdown: number | null
   onReveal: () => void
   onReset: () => void
-  isSpectator?: boolean
 }) {
   const allVoted = participants.length >= 2 && participants.every((p) => p.hasVoted)
   const votedCount = participants.filter((p) => p.hasVoted).length
@@ -52,20 +50,18 @@ export function TableCenter({
         </p>
         <p className="text-5xl font-black text-white leading-none">{majority ?? '—'}</p>
         {avg && <p className="text-[11px] text-emerald-300/80">avg {avg}</p>}
-        {!isSpectator && (
-          <button
-            onClick={onReset}
-            className="mt-2 px-4 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-colors border border-white/20"
-          >
-            Start new vote
-          </button>
-        )}
+        <button
+          onClick={onReset}
+          className="mt-2 px-4 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-xs font-semibold transition-colors border border-white/20"
+        >
+          Start new vote
+        </button>
       </div>
     )
   }
 
   // At least one voted — show reveal button (pulsing when all voted, muted otherwise)
-  if (canReveal && !isSpectator) {
+  if (canReveal) {
     return (
       <div className="flex flex-col items-center gap-2">
         {allVoted && <p className="text-xs text-emerald-300 font-medium">All votes in!</p>}
