@@ -1,5 +1,6 @@
 import { useAutoRefresh } from '../../hooks/useAutoRefresh'
 import type { OnCallEntry } from '../../types/pagerduty'
+import { getSentryOnCall } from '../../utils/sentry'
 import { WidgetShell } from './WidgetShell'
 
 function OnCallWidgetContent() {
@@ -26,6 +27,7 @@ function OnCallWidgetContent() {
   }
 
   const primary = data?.[0]
+  const sentryPerson = getSentryOnCall()
 
   return (
     <WidgetShell title="Who's On Call" to="/pagerduty">
@@ -39,6 +41,12 @@ function OnCallWidgetContent() {
       ) : (
         <p className="text-xs text-gray-500 dark:text-gray-400">No schedule found</p>
       )}
+      <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">
+          Sentry
+        </p>
+        <p className="font-semibold text-gray-900 dark:text-gray-100">{sentryPerson}</p>
+      </div>
     </WidgetShell>
   )
 }
