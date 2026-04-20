@@ -5,7 +5,17 @@ import { SentryDutyModal } from '../components/standup/SentryDutyModal'
 import { NameList } from '../components/standup/NameList'
 import { getSentryOnCall } from '../utils/sentry'
 
-const TEAM_PRESET = ['Lance', 'Josh', 'Happi', 'Patrik', 'Craig', 'Kana', 'Barry', 'Michael']
+const TEAM_PRESET = [
+  'Lance',
+  'Josh',
+  'Happi',
+  'Patrik',
+  'Craig',
+  'Kana',
+  'Barry',
+  'Michael',
+  'Demi',
+]
 const POLL_INTERVAL = 5000
 
 /** Shape of the standup state persisted in Cloudflare KV and returned by the `/api/standup` endpoint. */
