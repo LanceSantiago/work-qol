@@ -6,17 +6,31 @@ import type { ClientMessage, RoomState, Participant } from '../types/scrumPoker'
  * Maintains the shared `RoomState` in memory and handles join, vote, reveal, reset,
  * and emoji-reaction messages from connected clients, broadcasting updated state after each change.
  */
+const DISCONNECT_TIMEOUT_MS = 60_000
+
 export default class ScrumPokerServer implements Party.Server {
   private state: RoomState = {
     participants: [],
     revealed: false,
     round: 1,
   }
+  private disconnectTimers = new Map<string, ReturnType<typeof setTimeout>>()
 
   constructor(readonly room: Party.Room) {}
 
   /** Sends the current room state to a newly connected client so they can render immediately. */
   onConnect(conn: Party.Connection) {
+    // Clear any pending removal timer for this connection
+    const timer = this.disconnectTimers.get(conn.id)
+    if (timer) {
+      clearTimeout(timer)
+      this.disconnectTimers.delete(conn.id)
+    }
+    const existing = this.state.participants.find((p) => p.id === conn.id)
+    if (existing) {
+      existing.connected = true
+      this.room.broadcast(JSON.stringify({ type: 'state', state: this.state }))
+    }
     conn.send(JSON.stringify({ type: 'state', state: this.state }))
   }
 
@@ -38,10 +52,12 @@ export default class ScrumPokerServer implements Party.Server {
             vote: null,
             hasVoted: false,
             originalVote: null,
+            connected: true,
           }
           this.state.participants.push(participant)
         } else {
           existing.name = msg.name
+          existing.connected = true
         }
         break
       }
@@ -92,10 +108,21 @@ export default class ScrumPokerServer implements Party.Server {
     this.room.broadcast(JSON.stringify({ type: 'state', state: this.state }))
   }
 
-  /** Removes the disconnected participant from state and broadcasts the updated list. */
+  /** Marks the participant as disconnected and schedules removal after the grace period. */
   onClose(conn: Party.Connection) {
-    this.state.participants = this.state.participants.filter((p) => p.id !== conn.id)
+    const participant = this.state.participants.find((p) => p.id === conn.id)
+    if (!participant) return
+
+    participant.connected = false
     this.room.broadcast(JSON.stringify({ type: 'state', state: this.state }))
+
+    const timer = setTimeout(() => {
+      this.state.participants = this.state.participants.filter((p) => p.id !== conn.id)
+      this.disconnectTimers.delete(conn.id)
+      this.room.broadcast(JSON.stringify({ type: 'state', state: this.state }))
+    }, DISCONNECT_TIMEOUT_MS)
+
+    this.disconnectTimers.set(conn.id, timer)
   }
 }
 

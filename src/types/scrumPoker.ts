@@ -26,6 +26,7 @@ export interface Participant {
   vote: CardValue | null
   hasVoted: boolean
   originalVote: CardValue | null // snapshot taken at reveal, null until then
+  connected: boolean
 }
 
 /** Full shared state of a scrum poker room, broadcast to all connected clients. */

@@ -3,7 +3,7 @@ import ErrorBoundary from '../components/ErrorBoundary'
 import { IncidentsWidget } from '../components/home/IncidentsWidget'
 import { OnCallWidget } from '../components/home/OnCallWidget'
 import { SentryWidget } from '../components/home/SentryWidget'
-import { GithubWidget } from '../components/home/GithubWidget'
+import { AbsenceWidget } from '../components/home/AbsenceWidget'
 import { TabTitleBadge } from '../components/home/TabTitleBadge'
 import { LastRefreshHint } from '../components/home/LastRefreshHint'
 
@@ -65,7 +65,7 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <ErrorBoundary title="Incidents widget failed">
-            <IncidentsWidget disabled />
+            <IncidentsWidget />
           </ErrorBoundary>
           <ErrorBoundary title="On-call widget failed">
             <OnCallWidget />
@@ -73,8 +73,8 @@ export default function Home() {
           <ErrorBoundary title="Sentry widget failed">
             <SentryWidget disabled />
           </ErrorBoundary>
-          <ErrorBoundary title="GitHub widget failed">
-            <GithubWidget disabled />
+          <ErrorBoundary title="Absence widget failed">
+            <AbsenceWidget disabled />
           </ErrorBoundary>
         </div>
         <LastRefreshHint />

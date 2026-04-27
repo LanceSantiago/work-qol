@@ -54,7 +54,10 @@ export function PlayerSeat({
 
   return (
     <div
-      className="absolute flex flex-col items-center gap-1"
+      className={[
+        'absolute flex flex-col items-center gap-1 transition-opacity duration-300',
+        participant.connected === false ? 'opacity-40' : '',
+      ].join(' ')}
       style={{ left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

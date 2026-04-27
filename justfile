@@ -9,9 +9,9 @@ default:
 
 # ── Docker ────────────────────────────────────────────────────────────────────
 
-# Rebuild images and start all containers (app + partykit)
+# Build + run wrangler pages dev (tests CF Pages Functions locally)
 start:
-    docker compose up --build -d
+    npm run pages:dev
 
 # Start containers in the background
 start-bg:
