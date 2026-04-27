@@ -98,7 +98,7 @@ export default function ScrumPoker() {
     const othersAllVoted = ps.filter((p) => p.id !== myIdRef.current).every((p) => p.hasVoted)
     if (othersAllVoted && !lastToVoteNotifiedRef.current) {
       lastToVoteNotifiedRef.current = true
-      const timer = setTimeout(() => setShowLastToVoteAlert(true), 15_000)
+      const timer = setTimeout(() => setShowLastToVoteAlert(true), 5_000)
       return () => clearTimeout(timer)
     }
   }, [roomState, isSpectator])
