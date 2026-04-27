@@ -8,7 +8,7 @@ import FoodPicker from './pages/FoodPicker'
 import PagerDuty from './pages/PagerDuty'
 import SentryViewer from './pages/SentryViewer'
 import GithubPRs from './pages/GithubPRs'
-import ClaudeStats from './pages/ClaudeStats'
+import Games from './pages/Games'
 
 /** Root application component. Sets up client-side routing and the global toast notification provider. */
 export default function App() {
@@ -24,7 +24,7 @@ export default function App() {
           <Route path="pagerduty" element={<PagerDuty />} />
           <Route path="sentry" element={<SentryViewer />} />
           <Route path="github" element={<GithubPRs />} />
-          <Route path="claude-stats" element={<ClaudeStats />} />
+          <Route path="games" element={<Games />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -9,8 +9,8 @@ const navLinks = [
   { to: '/food-picker', label: 'Food Picker' },
   { to: '/pagerduty', label: 'PagerDuty' },
   { to: '/sentry', label: 'Sentry', disabled: true },
-  { to: '/github', label: 'GitHub PRs', disabled: true },
-  { to: '/claude-stats', label: 'Claude Stats' },
+  { to: '/github', label: 'GitHub PRs' },
+  { to: '/games', label: 'Games' },
 ]
 
 const activeLinks = navLinks.filter((l) => !l.disabled)

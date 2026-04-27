@@ -74,7 +74,7 @@ export default function Home() {
             <SentryWidget disabled />
           </ErrorBoundary>
           <ErrorBoundary title="Absence widget failed">
-            <AbsenceWidget disabled />
+            <AbsenceWidget />
           </ErrorBoundary>
         </div>
         <LastRefreshHint />

@@ -36,7 +36,15 @@ function AbsenceWidgetContent() {
               <span className="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">
                 {entry.userName}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
+              <span
+                className={`text-xs shrink-0 ${
+                  /vacation|holiday|pto/i.test(entry.type)
+                    ? 'text-green-600 dark:text-green-400'
+                    : /sick|ill/i.test(entry.type)
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : 'text-gray-500 dark:text-gray-400'
+                }`}
+              >
                 {entry.type}
               </span>
             </li>
