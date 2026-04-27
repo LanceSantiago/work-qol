@@ -67,11 +67,49 @@ npm run pages:dev    # builds then runs wrangler pages dev on :8788
 | Variable | Description |
 |----------|-------------|
 | `PAGERDUTY_API_KEY` | PagerDuty REST API v2 token |
+| `ABSENCE_ICS_URL` | Private ICS/iCal feed URL for absence tracking |
 | `SENTRY_AUTH_TOKEN` | Sentry auth token |
 | `SENTRY_ORG_SLUG` | Sentry organization slug |
 | `SENTRY_PROJECT_SLUG` | Sentry project slug |
 | `GITHUB_TOKEN` | GitHub fine-grained PAT (read-only: Pull Requests) |
 | `GITHUB_REPOS` | Comma-separated repos to track, e.g. `myorg/api,myorg/frontend` |
+
+## Cloudflare Pages Setup
+
+### Required environment variables
+
+Add these as **secrets** in the Cloudflare Pages dashboard under **Settings → Environment variables**. They are server-side only and never sent to the browser.
+
+| Variable | Where to get it | What it does / what data it pulls |
+|----------|----------------|-----------------------------------|
+| `PAGERDUTY_API_KEY` | PagerDuty → **Integrations → API Access Keys** → Create key (read-only) | Authenticates against the PagerDuty REST API v2. Pulls the current on-call schedule (who is on-call per escalation policy) and any active/triggered incidents. |
+| `ABSENCE_ICS_URL` | Your absence/leave management tool (e.g. HR system, Google Calendar, Personio) — copy the private ICS/iCal feed URL | Fetches an `.ics` calendar feed and parses it to show who is absent today. The URL typically contains a secret token — treat it like a password. |
+| `SENTRY_AUTH_TOKEN` | Sentry → **Settings → Account → API → Auth Tokens** → Create token (scope: `org:read`, `project:read`, `event:read`) | Authenticates against the Sentry API. Pulls the 50 most recent unresolved issues across the org from the last 24 hours, including error counts and affected user counts. |
+| `SENTRY_ORG_SLUG` | Sentry → **Settings → Organization** → the slug shown in the URL (e.g. `my-company`) | Identifies which Sentry organization to query. |
+| `SENTRY_PROJECT_SLUG` | Sentry → **Settings → Projects** → project slug | _(Currently reserved for future per-project filtering; not yet used in API calls.)_ |
+| `GITHUB_TOKEN` | GitHub → **Settings → Developer settings → Fine-grained personal access tokens** → New token. Grant **read-only** access to **Pull requests** for the target repos. | Authenticates against the GitHub REST API. Pulls open (non-draft) pull requests from every repo listed in `GITHUB_REPOS`, flagging any PRs older than 2 days as stale. |
+| `GITHUB_REPOS` | Not a secret — set as a plain variable | Comma-separated list of `org/repo` slugs to monitor, e.g. `myorg/api,myorg/frontend`. Controls which repos the PR widget queries. |
+
+### KV namespaces
+
+Three KV namespaces are required and must be bound in the Pages dashboard under **Settings → Functions → KV namespace bindings**:
+
+| Binding name | Purpose |
+|---|---|
+| `PLACES` | Stores Food Picker locations (name, coordinates, visited flag). |
+| `STANDUP` | Stores the standup wheel participant list and last winner. |
+| `CLAUDE_STATS` | Stores Claude API token usage stats. |
+
+Create each namespace via the Cloudflare dashboard or:
+```bash
+wrangler kv namespace create work-qol-places
+wrangler kv namespace create work-qol-standup
+wrangler kv namespace create claude-stats
+```
+
+Then copy the returned IDs into [wrangler.toml](wrangler.toml) and bind them in the Pages dashboard using the binding names above.
+
+---
 
 ## Deployment
 
