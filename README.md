@@ -96,7 +96,15 @@ In the Cloudflare dashboard, create a KV namespace named `PLACES`. Add its IDs t
 
 ### 4. Enable Cloudflare Access
 
-In Zero Trust → Access → Applications, add your Cloudflare Pages app and configure an email allowlist or OAuth policy.
+1. Go to [one.dash.cloudflare.com](https://one.dash.cloudflare.com) → **Zero Trust** → **Access** → **Applications**
+2. Click **Add an application** → choose **Self-hosted**
+3. Set **Application name** (e.g. `work-qol`) and **Application domain** to your Cloudflare Pages URL (e.g. `work-qol.pages.dev`)
+4. Under **Policies**, create a policy (e.g. `Allow team`) with a rule like:
+   - **Selector**: Emails → add allowed email addresses, **or**
+   - **Selector**: Emails ending in → your company domain (e.g. `@yourcompany.com`)
+5. Save the application — Cloudflare will now gate the entire site behind a login page
+
+No code changes are needed; Cloudflare handles the auth entirely at the edge.
 
 ## Scripts
 
