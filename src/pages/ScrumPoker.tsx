@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import usePartySocket from 'partysocket/react'
 import type { RoomState, CardValue, ServerMessage, ReactionEmoji } from '../types/scrumPoker'
 import { CARD_VALUES } from '../types/scrumPoker'
@@ -19,14 +20,16 @@ const NAME_KEY = 'scrum-poker-name'
  * reaction flying animations between participant cards.
  */
 export default function ScrumPoker() {
+  const [searchParams] = useSearchParams()
+  const autoSpectator = searchParams.get('spectator') === 'true'
+
   const [name, setName] = useState(() => localStorage.getItem(NAME_KEY) ?? '')
-  const [joined, setJoined] = useState(false)
-  const [isSpectator, setIsSpectator] = useState(false)
+  const [joined, setJoined] = useState(autoSpectator)
+  const [isSpectator, setIsSpectator] = useState(autoSpectator)
   const [roomState, setRoomState] = useState<RoomState | null>(null)
   const [myVote, setMyVote] = useState<CardValue | null>(null)
   const [countdown, setCountdown] = useState<number | null>(null)
   const [cardsVisible, setCardsVisible] = useState(false)
-  const [presenterMode, setPresenterMode] = useState(false)
 
   const myIdRef = useRef<string | null>(null)
   const prevRevealedRef = useRef(false)
@@ -219,11 +222,10 @@ export default function ScrumPoker() {
   ) : null
 
   return (
-    // Outer: fixed viewport height, scrollable only in presenter mode
     <div
       style={{
         height: 'calc(100dvh - 7.5rem)',
-        overflowY: presenterMode ? 'auto' : 'hidden',
+        overflowY: 'hidden',
       }}
     >
       {showLastToVoteAlert && (
@@ -249,14 +251,11 @@ export default function ScrumPoker() {
           {!isSpectator && (
             <div className="flex flex-col items-end gap-1">
               <button
-                onClick={() => setPresenterMode((m) => !m)}
-                title={presenterMode ? 'Exit presenter mode' : 'Enter presenter mode'}
-                className={[
-                  'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border',
-                  presenterMode
-                    ? 'bg-blue-600 border-blue-500 text-white'
-                    : 'bg-transparent border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500',
-                ].join(' ')}
+                onClick={() =>
+                  window.open(`${window.location.origin}/scrum-poker?spectator=true`, '_blank')
+                }
+                title="Open spectator view in a new tab"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors border bg-transparent border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -273,13 +272,11 @@ export default function ScrumPoker() {
                   <line x1="8" y1="21" x2="16" y2="21" />
                   <line x1="12" y1="17" x2="12" y2="21" />
                 </svg>
-                {presenterMode ? 'Presenting' : 'Present'}
+                Present
               </button>
               {cardsVisible && (
                 <p className="text-xs text-blue-500 dark:text-blue-400 font-medium text-right">
-                  {presenterMode
-                    ? 'Cards revealed — scroll down to vote'
-                    : 'Cards revealed — click any card to change your vote'}
+                  Cards revealed — click any card to change your vote
                 </p>
               )}
             </div>
@@ -295,7 +292,7 @@ export default function ScrumPoker() {
               cardsVisible={cardsVisible}
               isMe={participant.id === myIdRef.current}
               isSpectator={isSpectator}
-              presenterMode={presenterMode}
+              presenterMode={false}
               x={seatPositions[i][0]}
               y={seatPositions[i][1]}
               index={i}
@@ -325,13 +322,9 @@ export default function ScrumPoker() {
           </div>
         </div>
 
-        {/* Card deck sits at the bottom of the viewport in normal mode */}
-        {!presenterMode && cardDeck}
+        {/* Card deck sits at the bottom of the viewport */}
+        {cardDeck}
       </div>
-
-      {/* In presenter mode the deck lives outside the fixed-height flex div,
-          so it's naturally below the fold and reachable by scrolling */}
-      {presenterMode && cardDeck}
     </div>
   )
 }
