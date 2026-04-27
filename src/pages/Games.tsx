@@ -54,6 +54,14 @@ const games: Game[] = [
     platform: 'steam',
   },
   {
+    id: 'krunker',
+    name: 'Krunker',
+    description:
+      'A fast-paced browser-based first-person shooter with a blocky art style, multiple classes, and no download required.',
+    imageUrl: '/krunker.png',
+    link: 'https://krunker.io/',
+  },
+  {
     id: 'among-us',
     name: 'Among Us',
     description:
