@@ -3,22 +3,15 @@ pages_build_output_dir = "dist"
 compatibility_date = "2024-01-01"
 
 # KV namespace for Food Picker places
-# Dashboard name: work-qol-places
+# Dashboard name: dash-places
 [[kv_namespaces]]
 binding = "PLACES"
 id = "683dda37caa5405ebbfa8318ac6ab4a6"
 preview_id = "683dda37caa5405ebbfa8318ac6ab4a6"
 
 # KV namespace for Standup Wheel (shared names + last winner)
-# Dashboard name: work-qol-standup
+# Dashboard name: dash-standup
 [[kv_namespaces]]
 binding = "STANDUP"
 id = "cc6d3429f0454345a0ae9db7cad96dc8"
 preview_id = "cc6d3429f0454345a0ae9db7cad96dc8"
-
-# KV namespace for Claude token usage stats
-# Run: wrangler kv namespace create claude-stats  (then fill in the id below)
-[[kv_namespaces]]
-binding = "CLAUDE_STATS"
-id = "1726e5f2f4b84e52845d6f7abd7bb273"
-preview_id = "1726e5f2f4b84e52845d6f7abd7bb273"
